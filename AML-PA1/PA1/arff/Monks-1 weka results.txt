@@ -1,0 +1,44 @@
+MONKS-1
+
+J48 pruned tree
+------------------
+
+a5 = 1: 1 (29.0)
+a5 = 2: 0 (31.0/11.0)
+a5 = 3
+|   a6 = 1: 0 (13.0/3.0)
+|   a6 = 2
+|   |   a3 = 1: 1 (7.0/2.0)
+|   |   a3 = 2: 0 (10.0/3.0)
+a5 = 4
+|   a1 = 1: 0 (14.0/1.0)
+|   a1 = 2
+|   |   a2 = 1: 0 (6.0)
+|   |   a2 = 2: 1 (4.0)
+|   |   a2 = 3: 0 (1.0)
+|   a1 = 3
+|   |   a2 = 1: 1 (0.0)
+|   |   a2 = 2: 0 (3.0)
+|   |   a2 = 3: 1 (6.0)
+
+Number of Leaves  : 	12
+
+Size of the tree : 	18
+
+=== Detailed Accuracy By Class ===
+
+                 TP Rate  FP Rate  Precision  Recall   F-Measure  MCC      ROC Area  PRC Area  Class
+                 0.861    0.347    0.713      0.861    0.780      0.525    0.829     0.786     0
+                 0.653    0.139    0.825      0.653    0.729      0.525    0.829     0.857     1
+Weighted Avg.    0.757    0.243    0.769      0.757    0.754      0.525    0.829     0.821     
+
+=== Confusion Matrix ===
+
+   a   b   <-- classified as
+ 186  30 |   a = 0
+  75 141 |   b = 1
+  
+=== Summary ===
+
+Correctly Classified Instances         327               75.6944 %
+Incorrectly Classified Instances       105               24.3056 %
