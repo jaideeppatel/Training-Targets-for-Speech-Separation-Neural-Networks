@@ -7,29 +7,31 @@ from random import randint
 import sys, os
 
 
-
+# Main function call to perform the Ensemble bagging for the given parameters ...
 def learn_bagged(tdepth, nummodels, datapath):
-    # apply decision tree builder in the train data
+    # Apply decision tree builder in the train data...
     depth = tdepth
     noofbags = nummodels
     allpredictions=pd.DataFrame()
 
-    # Create Bag data for the current iteration...
+    # Create Bag data for the current iteration and loop for given number of bags...
     for repeat in range(0,noofbags):
         # Create Bag data for the current iteration...
         train = createBags(inputdata)
         filename = 'trainbag'+str(repeat)+'.csv'
-        train.to_csv(filename)
+        # train.to_csv(filename)
+        # The below function will build the decision tree for the given train data set ans for the given depth ...
         BuildDesiciontree(depth,train)
         allpredictions[repeat] = testdata['predclass']
         testdata['predclass'] = 'NA'
         testdata.is_copy = False
 
-    # Capture the Prediction result
+    # Capture the Prediction results of the decision tree ....
     # print(allpredictions)
-    allpredictions.to_csv('allprediction.csv')
+    # allpredictions.to_csv('allprediction.csv')
     sum_class = np.sum(allpredictions,axis=1)
     predicted_class = []
+    # loop to capture all predictions and determine the majority prediction for every test record...
     x = 0
     for x in range(0,testrecords):
         if sum_class[x]<=noofbags/2:
@@ -39,8 +41,8 @@ def learn_bagged(tdepth, nummodels, datapath):
 
     # print(predicted_class)
     testdata['predclass'] = predicted_class
-    testdata.to_csv('testresult.csv')
-    # Function Call to find accuracy
+    # testdata.to_csv('testresult.csv')
+    # Function Call to find accuracy for the overall ensemble ...
     treeaccuracy = FindAccuracy(testdata)
 
     # Function Call to build confucation matrix
@@ -50,6 +52,7 @@ def learn_bagged(tdepth, nummodels, datapath):
 
     return treeaccuracy
 
+# This function is to create bags from the train data by implementing samling with replacement ...
 def createBags(inputdata):
     # print('Create Bag Called')
     trainbag = pd.DataFrame()
@@ -61,7 +64,7 @@ def createBags(inputdata):
         trainbag = trainbag.append(inputdata.iloc[rownum])
     return trainbag
 
-
+# This function is to create bag from the train data for implementing the boosting iterations ...
 def createBagsBoost(inputdata):
     # print('Create Bag Called')
     trainbag = pd.DataFrame()
@@ -75,17 +78,18 @@ def createBagsBoost(inputdata):
     return trainbag
 
 
-# Main Function
+# Main Function to build the decision tree and to predict the outcomes using the test data and find the accuracy...
 def BuildDesiciontree(inputdepth,train):
     # Function Call to Construct the Tree Structure
     tree_table=BuildTree(inputdepth,train)
 
-    # Build a Temp Search Tree
+    # Build a Temporary Search Tree
     searchtree = tree_table
 
     #Function Call to perform the Prediction
     for i in range(0,testdata.shape[0]):
         testnode = testdata.iloc[i]
+        # This function acall is to predict class of the test records using the decision tree ....
         GetPredition(searchtree,testnode,i)
 
 # Function to Calculate the Accuracy
@@ -141,7 +145,7 @@ def BuildTree(inputdepth,train):
             if len(parentclasses)>1:
 
                 depth=depthlist[0]+1
-                maxdf = GetInformationGain(new_data) # Calling the information gain function
+                maxdf = GetInformationGain(new_data) # Calling the information gain function to get the split criteria ...
                 class_value = mode(new_data['class'])[0][0]
                 for items in maxdf.values:
                     splitcol = items[0]
@@ -183,7 +187,7 @@ def BuildTree(inputdepth,train):
                 if len(dflist)>0:
                     new_data=pd.DataFrame(dflist[0])
             else:
-                # If node is a leaf below gets executed
+                # If node is a leaf then below gets executed
                 nodenumber=nodenumber+1
                 classvalue = mode(new_data['class'])[0][0]
                 thisrow = pd.DataFrame([[int(nodenumber),depthlist[0],'','','','','','Y',classvalue]], columns=['nodenumber','depth','attr','leftvalue','rightvalue','left','right','isleaf','class'])
@@ -193,7 +197,7 @@ def BuildTree(inputdepth,train):
                 if len(dflist)>0:
                     new_data=pd.DataFrame(dflist[0])
         else:
-            # If node is a leaf below gets executed
+            # If node is a leaf then below gets executed
             nodenumber=nodenumber+1
             classvalue = mode(new_data['class'])[0][0]
             thisrow = pd.DataFrame([[int(nodenumber),depthlist[0],'','','','','','Y',classvalue]], columns=['nodenumber','depth','attr','leftvalue','rightvalue','left','right','isleaf','class'])
@@ -276,6 +280,7 @@ def GetInformationGain(mydata):
     maxdf = categorylistentropy[maximum:maximum+1]
     return maxdf
 
+# Function to traverse the decision tree to generate the prediction for the test record ...
 def GetPredition(searchtree,testnode,i):
     # print('Get Pred Called')
     nextnode=1.0
@@ -309,6 +314,8 @@ def GetPredition(searchtree,testnode,i):
                 prediction = False
                 testdata.loc[i,'predclass'] = 'F'
 
+# This function is for the data preprocessing to eliminate the dditional columns and the define the class for the data set ...
+# This is done for train data, test data, and an additional data frame for the weighted data set...
 def preparedata(inputdata,testdata,org_traindata):
     # print('Prep data called')
     # Prepare train data
@@ -335,7 +342,7 @@ def preparedata(inputdata,testdata,org_traindata):
     org_traindata['predclass'] = 'NA'
     org_traindata.is_copy = False
 
-
+# This function is to update the weights of the training data for every boosting iteration ...
 def UpdateWeight(error,errorlist):
     # print('Update weight Called')
     # here we update the weights of each training record based on the results obtained by testing ....
@@ -355,7 +362,7 @@ def UpdateWeight(error,errorlist):
     return alpha
 
 
-# Function to Calculate the Accuracy
+# Function to Calculate the Accuracy on the training data set for boosting and to determine the accuracy and misclassification error
 def FindWeightParam(org_traindata):
     # print('Find weight Param')
     count=0
@@ -373,21 +380,21 @@ def FindWeightParam(org_traindata):
     # print("Accuracy is: ",accuracy)
     return retval
 
-# Main Function - For Boosting
+# Main Function call for building the decision tree for boosting...
 def BuildDesiciontreeBoost(inputdepth,train):
     # print('Dec Tree Boost')
-    # Function Call to Construct the Tree Structure
+    # Function Call to Construct the Tree Structure for boosting ...
     tree_table=BuildTreeBoost(inputdepth,train)
 
     # Build a Temp Search Tree
     searchtree = tree_table
 
-    #Function Call to perform the Prediction on testdata
+    #Function Call to perform the Prediction on testdata...
     for i in range(0,testdata.shape[0]):
         testnode = testdata.iloc[i]
         GetPredition(searchtree,testnode,i)
 
-    #Function Call to perform the Prediction on org_traindata
+    #Function Call to perform the Prediction on traindata ...
     for i in range(0,org_traindata.shape[0]):
         testnode = org_traindata.iloc[i]
         GetTrainPredition(searchtree,testnode,i)
@@ -418,7 +425,7 @@ def BuildTreeBoost(inputdepth,train):
             if len(parentclasses)>1:
 
                 depth=depthlist[0]+1
-                maxdf = GetInformationGainBoost(new_data) # Calling the information gain function
+                maxdf = GetInformationGainBoost(new_data) # Calling the weighted information gain function
                 class_value = mode(new_data['class'])[0][0]
                 for items in maxdf.values:
                     splitcol = items[0]
@@ -486,7 +493,7 @@ def BuildTreeBoost(inputdepth,train):
     # print(tree_table) # This returns the final decision tree in a table format
     return tree_table
 
-# Function to get the split criteria using information gain
+# Function to get the split criteria using weighted information gain
 def GetInformationGainBoost(mydata):
     # print('Info gain boost')
     i=1
@@ -560,6 +567,7 @@ def GetInformationGainBoost(mydata):
     maxdf = categorylistentropy[maximum:maximum+1]
     return maxdf
 
+# This function is to predict the class variables for the train data set which is then used to update the weights ...
 def GetTrainPredition(searchtree,testnode,i):
     # print('train prediction')
     nextnode=1.0
@@ -595,7 +603,7 @@ def GetTrainPredition(searchtree,testnode,i):
 
 
 
-
+# Main function call to perform the Ensemble boosting for the given parameters ...
 def learn_boosted(tdepth, numtrees, datapath):
     # apply decision tree builder in the train data
     # print('Learn boosted called')
@@ -608,7 +616,7 @@ def learn_boosted(tdepth, numtrees, datapath):
         # Create Bag data for the current iteration...
         train = createBagsBoost(inputdata)
         filename = 'trainbag'+str(repeat)+'.csv'
-        train.to_csv(filename)
+        # train.to_csv(filename)
 
         BuildDesiciontreeBoost(depth,train)
 
@@ -628,14 +636,17 @@ def learn_boosted(tdepth, numtrees, datapath):
 
         # Function call to update the weights of the train data records
         modelwt = UpdateWeight(error,errorlist)
-        modelweight.append(modelwt)
+        if repeat < 2:
+            modelweight.append(modelwt)
+        else:
+            modelweight.append(modelwt/2)
         fname = 'weight'+str(repeat)+'.csv'
-        inputdata.to_csv(fname)
+        # inputdata.to_csv(fname)
 
 
 
     # print(allpredictions)
-    allpredictions.to_csv('allprediction.csv')
+    # allpredictions.to_csv('allprediction.csv')
     # sum_class = np.sum(allpredictions,axis=1)
 
     # Find final prediction using the sign function...
@@ -651,7 +662,7 @@ def learn_boosted(tdepth, numtrees, datapath):
         else:
             predicted_class.append(1)
     testdata['predclass'] = predicted_class
-    testdata.to_csv('testresult.csv')
+    # testdata.to_csv('testresult.csv')
 
     # Find accuracy for the prediction on the testdata
     # print(predicted_class)
