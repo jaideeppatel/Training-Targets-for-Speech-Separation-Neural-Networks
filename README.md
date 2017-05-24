@@ -21,7 +21,7 @@ Matlab 2016a or later
 Lagasne
 
 
-
-
+Note: 
+The pretrained models are ready to be tested. The developer can reuse the pretrained models and test the validation speech samples using the TrainandTestModel.py
 
 
